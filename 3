@@ -1,0 +1,24 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
+contract GameToken{
+    IERC20 public TOKENXU;
+    uint256 public balance;
+    constructor (address _tokenXu)public payable  {
+        TOKENXU=IERC20(_tokenXu);
+    }
+    event Sold(uint256 amount);
+    receive() payable external {
+        
+    }
+    function checkTotal() public view returns(uint256){
+        uint256  total =TOKENXU.balanceOf(address(this));
+        return  total;
+    }
+    function betGames(uint256 amount) payable public{
+        require(amount > 0, "You need to sell at least some tokens");
+        // uint256 allowance = TOKENXU.allowance(msg.sender, address(this));
+        // require(allowance >= amount, "Check the token allowance");
+        TOKENXU.transfer(address(this), amount);
+    }
+}
